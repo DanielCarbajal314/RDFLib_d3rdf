@@ -17,9 +17,17 @@
 <body>
     <div class="row col-sm-12">
         <div class="col-sm-4">
-            <form>
-                <input type="text">
-            </form>
+             <form id="CreateKnowRelationForm">
+                <div class="form-group">
+                    <label for="FirstPerson">First Person:</label>
+                    <input type="text" class="form-control" id="FirstPerson">
+                </div>
+                <div class="form-group">
+                    <label for="SecondPerson">First Person:</label>
+                    <input type="text" class="form-control" id="SecondPerson">
+                </div>
+                <button type="submit" class="btn btn-default">Create</button>
+            </form> 
         </div>
         <div class="col-sm-4">
             <pre id="DocumentContent"></pre>
@@ -30,53 +38,69 @@
     </div>
 </body>
 <script>
-    // var store = $rdf.graph()
-    // var timeout = 5000
-    // // var fetcher = new $rdf.Fetcher(store, timeout)
-
-    // // fetcher.nowOrWhenFetched(url, function(ok, body, xhr) {
-    // //     if (!ok) {
-    // //         console.log("Oops, something happened and couldn't fetch data");
-    // //     } else {
-    // //         // do something with the data in the store (see below)
-    // //     }
-    // // })
-    // var person = FOAF.Person;
-    // store.add(person, FOAF.NAME, "Albert Bloggs");
-    // var me = FOAF.Person;
-    // store.add(me, FOAF.NAME, "Daniel Carbajal");
-    //  store.add(me,FOAF.KNOWS, person);
+    var svg = d3.select("#svg-body")
+                .append("svg")
+				.attr("width", 800)
+				.attr("height", 600);
+	var force = d3.layout.force().size([800, 600]);
+    var graph;
+    var triples;
     var store = $rdf.graph()
-    var person = FOAF.PERSON;
-    var me = FOAF.PERSON;
-    store.add(me, FOAF.NAME, FOAF.STRING("Daniel Carbajal"));
-    store.add(person, FOAF.NAME, FOAF.STRING("ERASMO GOMEZ"));
-    store.add(me,FOAF.KNOWS,person);
-    $rdf.serialize(undefined, store, undefined, 'application/rdf+xml', function(err, str) {
-        $('#DocumentContent').text(str);
+    triples = [];
+	
+    $('#CreateKnowRelationForm').submit(function( event ) {
+        AddFoafKnowToD3();
+        AddFOAFKnowToXML();
+        updateRDFGraphs();
+        event.preventDefault();
     });
 
-    var triples = [
-  			{subject:"ex:ThaiLand", 	predicate:"ex:hasFood", 	object:"ex:TomYumKung"},
-  			{subject:"ex:TomYumKung", 	predicate:"rdf:type", 		object:"ex:SpicyFood"},
-  			{subject:"ex:TomYumKung", 	predicate:"ex:includes", 	object:"ex:shrimp"},
-  			{subject:"ex:TomYumKung", 	predicate:"ex:includes", 	object:"ex:chilly"},
-  			{subject:"ex:TomYumKung", 	predicate:"ex:includes", 	object:"ex:lemon"},
-  			{subject:"ex:lemon", 		predicate:"ex:hasTaste", 	object:"ex:sour"},
-  			{subject:"ex:chilly", 		predicate:"ex:hasTaste", 	object:"ex:spicy"}
-  		];
-		
-	var svg = d3.select("#svg-body").append("svg")
-				.attr("width", 800)
-				.attr("height", 600)
-				;
-				
-	var force = d3.layout.force().size([800, 600]);
-	
-	var graph = triplesToGraph(triples);
-	
-	update();
+    function AddFoafKnowToD3(){
+        var firtsPersonName  = $('#FirstPerson').val();
+        var secondPersonName = $('#SecondPerson').val();
+        var firtsPerson = FOAF.PERSON(firtsPersonName);
+        var secondPerson = FOAF.PERSON(secondPersonName);
+        var triple = new Triple();
+        triple.subject = firtsPerson.value;
+        triple.predicate = FOAF.KNOWS.value;
+        triple.object = secondPerson.value;
+        triples.push(triple);
+        triple = new Triple();
+        triple.subject = firtsPerson.value;
+        triple.predicate = FOAF.NAME.value;
+        triple.object = firtsPersonName
+        triples.push(triple);
+        triple = new Triple();
+        triple.subject = secondPerson.value;
+        triple.predicate = FOAF.NAME.value;
+        triple.object = secondPersonName
+        triples.push(triple);
+    }
 
+    function AddFOAFKnowToXML(){
+        var firtsPersonName  = $('#FirstPerson').val();
+        var secondPersonName = $('#SecondPerson').val();
+        var firtsPerson = FOAF.PERSON(firtsPersonName);
+        var secondPerson = FOAF.PERSON(secondPersonName);
+        store.add(firtsPerson, FOAF.NAME, FOAF.STRING(firtsPersonName));
+        store.add(secondPerson, FOAF.NAME, FOAF.STRING(secondPersonName));
+        store.add(firtsPerson,FOAF.KNOWS,secondPerson);
+    }
+
+    function updateRDFGraphs(){
+        $rdf.serialize(undefined, store, undefined, 'application/rdf+xml', function(err, str) {
+            $('#DocumentContent').text(str);
+        });
+        graph = triplesToGraph(triples);
+        update();
+    }
+
+    function Triple(){
+        this.subject="";
+        this.predicate="";
+        this.object="";
+        return this;
+    }
 
 </script>
     

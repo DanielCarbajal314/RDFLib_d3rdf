@@ -2,7 +2,7 @@ var foaf = $rdf.Namespace("http://xmlns.com/foaf/0.1/");
 
 var FOAF = {
     KNOWS : foaf('knows'),
-    PERSON : foaf('person'),
+    PERSON : (personName)=>{return $rdf.sym(foaf('person').value+'/'+personName)},
     NAME : foaf('name'),
     GIVEN_NAME : foaf('givenName'),
     NICK: foaf('nick'),
