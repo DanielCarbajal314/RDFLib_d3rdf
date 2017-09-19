@@ -19,8 +19,12 @@
         <div class="col-sm-4">
              <form id="CreatePersonForm">
                 <div class="form-group">
-                    <label for="PersonName">Person Name:</label>
-                    <input type="text" class="form-control" id="PersonName">
+                    <label for="PersonGivenName">Person Given Name:</label>
+                    <input type="text" class="form-control" id="PersonGivenName">
+                </div>
+                <div class="form-group">
+                    <label for="PersonFamilyName">Person Family Name:</label>
+                    <input type="text" class="form-control" id="PersonFamilyName">
                 </div>
                 <div class="form-group">
                     <label for="PersonNick">Person Nick:</label>
@@ -60,14 +64,26 @@
     });
 
     function AddFoafKnowToD3(){
-        var personName  = $('#PersonName').val();
+        var personGivenName  = $('#PersonGivenName').val();
+        var personFamilyName  = $('#PersonFamilyName').val();
+        var personName  = personGivenName + " " + personFamilyName;//$('#PersonName').val();
         var personHomepage = $('#PersonHomepage').val();
         var personNick = $('#PersonNick').val();
-        var firtsPerson = FOAF.PERSON(personName);
+        var firtsPerson = FOAF.PERSON(personGivenName);
         triple = new Triple();
         triple.subject = firtsPerson.value;
         triple.predicate = FOAF.NAME.value;
         triple.object = personName
+        triples.push(triple);
+        triple = new Triple();
+        triple.subject = firtsPerson.value;
+        triple.predicate = FOAF.GIVEN_NAME.value;
+        triple.object = personGivenName
+        triples.push(triple);
+        triple = new Triple();
+        triple.subject = firtsPerson.value;
+        triple.predicate = FOAF.FAMILY_NAME.value;
+        triple.object = personFamilyName
         triples.push(triple);
         triple = new Triple();
         triple.subject = firtsPerson.value;
@@ -82,11 +98,15 @@
     }
 
     function AddFOAFKnowToXML(){
-        var personName  = $('#PersonName').val();
+        var personGivenName  = $('#PersonGivenName').val();
+        var personFamilyName  = $('#PersonFamilyName').val();
+        var personName  = personGivenName + " " + personFamilyName;
         var personHomepage = $('#PersonHomepage').val();
         var personNick = $('#PersonNick').val();
-        var person = FOAF.PERSON(personName);
+        var person = FOAF.PERSON(personGivenName);
         store.add(person, FOAF.NAME, FOAF.STRING(personName));
+        store.add(person, FOAF.GIVEN_NAME, FOAF.STRING(personGivenName));
+        store.add(person, FOAF.FAMILY_NAME, FOAF.STRING(personFamilyName));
         store.add(person, FOAF.HOME_PAGE, FOAF.STRING(personHomepage));
         store.add(person, FOAF.NICK, FOAF.STRING(personNick));
     }
