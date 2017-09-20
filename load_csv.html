@@ -1,0 +1,162 @@
+ <!DOCTYPE html>
+ <meta charset="ISO-8859-1"> 
+<html>
+<head>
+<title>FOAF</title>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" href="./styles/graph.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="./js/rdflib.min.js"></script>
+<script src="./js/FOAF.js"></script>
+<script src="./js/graph.js"></script>
+
+</head>
+<body>
+    <div class="row col-sm-12">
+        <div class="col-sm-4">
+             <form id="CreatePersonForm">
+                <div class="form-group">
+                    <label for="PersonFile">Person File:</label>
+                    <input type="file" class="form-control" id="PersonFile">
+                </div>
+                <button type="submit" class="btn btn-default">Create</button>
+            </form> 
+        </div>
+        <div class="col-sm-4">
+            <pre id="DocumentContent"></pre>
+        </div>
+        <div class="col-sm-4">
+            <div id="svg-body" class="panel-body"></div>
+        </div>
+    </div>
+</body>
+<script>
+    var svg = d3.select("#svg-body")
+                .append("svg")
+				.attr("width", 800)
+				.attr("height", 600);
+	var force = d3.layout.force().size([800, 600]);
+    var graph;
+    var triples;
+    var store = $rdf.graph()
+    triples = [];
+	
+    $('#CreatePersonForm').submit(function( event ) {
+		ReadFile();
+        //AddFoafPersonToD3("Diego");
+        //AddFOAFKnowToXML();
+        //updateRDFGraphs();
+        event.preventDefault();
+    });
+    
+	function ReadFile() {
+	    var fileInput = document.getElementById("PersonFile");
+        var reader = new FileReader();
+        reader.onload = function () {
+        	var csv = event.target.result;
+      		var data = processData(csv);
+      		$(data).each(function(index,elem){
+				//console.log(elem);
+				AddFoafPersonToD3(elem);
+				AddFOAFKnowToXML(elem);
+      		});
+      		updateRDFGraphs();
+        };
+        // start reading the file. When it is done, calls the onload event defined above.
+        reader.readAsBinaryString(fileInput.files[0]);
+	}
+	
+	function processData(csv) {
+        var allTextLines = csv.split(/\r\n|\n/);
+        var people = [];
+        var headers = [];
+        for (var i=0; i<allTextLines.length; i++) {
+        	if (i == 0) {
+        		headers = allTextLines[i].split(',');
+        		continue;
+        	}
+            var data = allTextLines[i].split(',');
+            var tarr = [];
+            var obj = {};
+            for (var j=0; j<data.length; j++) {
+            	var index = headers[j];
+                obj[index] = data[j];
+            }
+            people.push(obj);
+        }
+      	return people;
+    }
+    
+    function AddFoafPersonToD3(person){
+        var personGivenName  = person.GivenName
+        var personFamilyName  = person.FamilyName
+        var personName  = personGivenName + " " + personFamilyName;
+        var personHomepage = person.Homepage;
+        var personNick = person.Nick;
+        var firtsPerson = FOAF.PERSON(personGivenName);
+        triple = new Triple();
+        triple.subject = firtsPerson.value;
+        triple.predicate = FOAF.NAME.value;
+        triple.object = personName;
+        triples.push(triple);
+        triple = new Triple();
+        triple.subject = firtsPerson.value;
+        triple.predicate = FOAF.GIVEN_NAME.value;
+        triple.object = personGivenName;
+        triples.push(triple);
+        triple = new Triple();
+        triple.subject = firtsPerson.value;
+        triple.predicate = FOAF.FAMILY_NAME.value;
+        triple.object = personFamilyName;
+        triples.push(triple);
+        triple = new Triple();
+        triple.subject = firtsPerson.value;
+        triple.predicate = FOAF.HOME_PAGE.value;
+        triple.object = personHomepage
+        triples.push(triple);
+        triple = new Triple();
+        triple.subject = firtsPerson.value;
+        triple.predicate = FOAF.NICK.value;
+        triple.object = personNick
+        triples.push(triple);
+    }
+
+    function AddFOAFKnowToXML(person){
+        var personGivenName  = person.GivenName;
+        var personFamilyName  = person.FamilyName;
+        var personName  = personGivenName + " " + personFamilyName;
+        var personHomepage = person.Homepage;
+        var personNick = person.Nick;
+        var person = FOAF.PERSON(personGivenName);
+        store.add(person, FOAF.NAME, FOAF.STRING(personName));
+        store.add(person, FOAF.GIVEN_NAME, FOAF.STRING(personGivenName));
+        store.add(person, FOAF.FAMILY_NAME, FOAF.STRING(personFamilyName));
+        store.add(person, FOAF.HOME_PAGE, FOAF.STRING(personHomepage));
+        store.add(person, FOAF.NICK, FOAF.STRING(personNick));
+    }
+
+    function updateRDFGraphs(){
+        $rdf.serialize(undefined, store, undefined, 'application/rdf+xml', function(err, str) {
+            $('#DocumentContent').text(str);
+        });
+        graph = triplesToGraph(triples);
+        update();
+    }
+
+    function Triple(){
+        this.subject="";
+        this.predicate="";
+        this.object="";
+        return this;
+    }
+
+</script>
+    
+
+
+</html> 
+
+
