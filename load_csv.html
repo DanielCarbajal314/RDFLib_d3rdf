@@ -12,6 +12,7 @@
 <script src="./js/rdflib.min.js"></script>
 <script src="./js/FOAF.js"></script>
 <script src="./js/graph.js"></script>
+<script src="./js/utils.js"></script>
 
 </head>
 <body>
@@ -27,6 +28,11 @@
         </div>
         <div class="col-sm-4">
             <pre id="DocumentContent"></pre>
+            <div class="col-sm-4">
+             <form id="DownloadXmlForm">
+                <button type="submit" class="btn btn-default">Download</button>
+            </form> 
+        </div>
         </div>
         <div class="col-sm-4">
             <div id="svg-body" class="panel-body"></div>
@@ -46,9 +52,13 @@
 	
     $('#CreatePersonForm').submit(function( event ) {
 		ReadFile();
-        //AddFoafPersonToD3("Diego");
-        //AddFOAFKnowToXML();
-        //updateRDFGraphs();
+        event.preventDefault();
+    });
+    
+    $('#DownloadXmlForm').submit(function( event ) {
+		$rdf.serialize(undefined, store, undefined, 'application/rdf+xml', function(err, str) {
+        	download("my_foaf_document.rdf",str);
+        });	
         event.preventDefault();
     });
     
@@ -60,8 +70,9 @@
       		var data = processData(csv);
       		$(data).each(function(index,elem){
 				//console.log(elem);
+				elem.Id = elem.Id + "_" + elem.GivenName + "_" + getHashId(5);
 				AddFoafPersonToD3(elem);
-				AddFOAFKnowToXML(elem);
+				AddFOAFPersonToXML(elem);
       		});
       		updateRDFGraphs();
         };
@@ -96,7 +107,7 @@
         var personName  = personGivenName + " " + personFamilyName;
         var personHomepage = person.Homepage;
         var personNick = person.Nick;
-        var firtsPerson = FOAF.PERSON(personGivenName);
+        var firtsPerson = FOAF.PERSON(person.Id);
         triple = new Triple();
         triple.subject = firtsPerson.value;
         triple.predicate = FOAF.NAME.value;
@@ -115,22 +126,22 @@
         triple = new Triple();
         triple.subject = firtsPerson.value;
         triple.predicate = FOAF.HOME_PAGE.value;
-        triple.object = personHomepage
+        triple.object = personHomepage;
         triples.push(triple);
         triple = new Triple();
         triple.subject = firtsPerson.value;
         triple.predicate = FOAF.NICK.value;
-        triple.object = personNick
+        triple.object = personNick;
         triples.push(triple);
     }
 
-    function AddFOAFKnowToXML(person){
+    function AddFOAFPersonToXML(person){
         var personGivenName  = person.GivenName;
         var personFamilyName  = person.FamilyName;
         var personName  = personGivenName + " " + personFamilyName;
         var personHomepage = person.Homepage;
         var personNick = person.Nick;
-        var person = FOAF.PERSON(personGivenName);
+        var person = FOAF.PERSON(person.Id);
         store.add(person, FOAF.NAME, FOAF.STRING(personName));
         store.add(person, FOAF.GIVEN_NAME, FOAF.STRING(personGivenName));
         store.add(person, FOAF.FAMILY_NAME, FOAF.STRING(personFamilyName));

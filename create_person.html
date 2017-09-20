@@ -12,6 +12,7 @@
 <script src="./js/rdflib.min.js"></script>
 <script src="./js/FOAF.js"></script>
 <script src="./js/graph.js"></script>
+<script src="./js/utils.js"></script>
 
 </head>
 <body>
@@ -39,6 +40,9 @@
         </div>
         <div class="col-sm-4">
             <pre id="DocumentContent"></pre>
+            <form id="DownloadXmlForm">
+                <button type="submit" class="btn btn-default">Download</button>
+            </form> 
         </div>
         <div class="col-sm-4">
             <div id="svg-body" class="panel-body"></div>
@@ -56,10 +60,20 @@
     var store = $rdf.graph()
     triples = [];
 	
-    $('#CreatePersonForm').submit(function( event ) {
+	var personHash = "";
+	
+	$('#CreatePersonForm').submit(function( event ) {
+		personHash = getHashId(5);
         AddFoafKnowToD3();
         AddFOAFKnowToXML();
         updateRDFGraphs();
+        event.preventDefault();
+    });
+    
+    $('#DownloadXmlForm').submit(function( event ) {
+		$rdf.serialize(undefined, store, undefined, 'application/rdf+xml', function(err, str) {
+        	download("my_foaf_document.rdf",str);
+        });	
         event.preventDefault();
     });
 
@@ -69,7 +83,7 @@
         var personName  = personGivenName + " " + personFamilyName;//$('#PersonName').val();
         var personHomepage = $('#PersonHomepage').val();
         var personNick = $('#PersonNick').val();
-        var firtsPerson = FOAF.PERSON(personGivenName);
+        var firtsPerson = FOAF.PERSON(personGivenName + "_" + personHash);
         triple = new Triple();
         triple.subject = firtsPerson.value;
         triple.predicate = FOAF.NAME.value;
@@ -103,7 +117,7 @@
         var personName  = personGivenName + " " + personFamilyName;
         var personHomepage = $('#PersonHomepage').val();
         var personNick = $('#PersonNick').val();
-        var person = FOAF.PERSON(personGivenName);
+        var person = FOAF.PERSON(personGivenName + "_" + personHash);
         store.add(person, FOAF.NAME, FOAF.STRING(personName));
         store.add(person, FOAF.GIVEN_NAME, FOAF.STRING(personGivenName));
         store.add(person, FOAF.FAMILY_NAME, FOAF.STRING(personFamilyName));
